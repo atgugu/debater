@@ -1,0 +1,1991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>debater</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* ======== Theme Variables ======== */
+        :root {
+            --bg-body:#191A1F;--bg-base:#1F2025;--bg-surface:#282930;--bg-surface-active:#31323A;
+            --bg-input:#25262D;--bg-code:#2A2B33;
+            --bg-overlay:rgba(0,0,0,0.60);--bg-overlay-heavy:rgba(0,0,0,0.75);
+            --accent:#7EB88C;--accent-dim:#3A4840;--accent-hover:#96CCA2;--accent-muted:rgba(126,184,140,0.12);
+            --text-primary:#C8C9CE;--text-heading-1:#E8E8EC;--text-heading-2:#DDDDE2;--text-heading-3:#D0D1D6;
+            --text-muted:#8E8F96;--text-dim:#5E5F66;--text-link:#7BA8D4;--text-code:#D4A76A;
+            --text-thinking:#C9A84C;--text-accent:#7EB88C;--text-accent-dim:#5E8C68;--text-accent-dimmer:#4A7053;
+            --border-subtle:#383940;--border-section:rgba(126,184,140,0.10);
+            --btn-primary-bg:#4A7053;--btn-primary-hover:#5E8C68;
+            --btn-secondary-bg:rgba(126,184,140,0.12);--btn-secondary-hover:rgba(126,184,140,0.20);
+            --btn-resume-bg:#7A6030;--btn-resume-hover:#8D7040;
+            --btn-stop-bg:rgba(180,60,55,0.25);--btn-stop-hover:rgba(180,60,55,0.40);--btn-stop-text:#E08080;
+            --btn-text:#E8E8EC;
+            --score-defender-bg:#2A3A4F;--score-skeptic-bg:#4F2A2A;
+            --score-bar-track:#2A2B33;--score-bar-fill:#5B8FC4;
+            --score-d-text:#7BA8D4;--score-s-text:#D48080;
+            --score-d-high:#7BA8D4;--score-d-mid:#5B8FC4;--score-d-low:#3D6A9E;
+            --score-s-high:#D48080;--score-s-mid:#C06060;--score-s-low:#8C3A3A;
+            --status-running:#7EB88C;--status-complete:#7BA8D4;--status-idle:#5E5F66;
+            --status-yellow:#C9A84C;--status-error:#D46060;
+        }
+        html.light {
+            --bg-body:#FFFAF5;--bg-base:#FFF8F0;--bg-surface:#F5EDE3;--bg-surface-active:#EDE3D5;
+            --bg-input:#F0E6D8;--bg-code:#F5EDE3;
+            --bg-overlay:rgba(60,40,20,0.35);--bg-overlay-heavy:rgba(60,40,20,0.55);
+            --accent:#D4734A;--accent-dim:#E8D5C4;--accent-hover:#C25D34;--accent-muted:rgba(212,115,74,0.15);
+            --text-primary:#4A3728;--text-heading-1:#2C1A0E;--text-heading-2:#3D2B1F;--text-heading-3:#4A3728;
+            --text-muted:#8B7355;--text-dim:#9A8570;--text-link:#C25D34;--text-code:#B85C3A;
+            --text-thinking:#D4734A;--text-accent:#D4734A;--text-accent-dim:#B85C3A;--text-accent-dimmer:#9B4A2E;
+            --border-subtle:#E0D0C0;--border-section:rgba(212,115,74,0.15);
+            --btn-primary-bg:#D4734A;--btn-primary-hover:#C25D34;
+            --btn-secondary-bg:rgba(212,115,74,0.15);--btn-secondary-hover:rgba(212,115,74,0.25);
+            --btn-resume-bg:#E8984A;--btn-resume-hover:#D4734A;
+            --btn-stop-bg:rgba(200,50,50,0.15);--btn-stop-hover:rgba(200,50,50,0.25);--btn-stop-text:#C0392B;
+            --btn-text:#FFFAF5;
+            --score-defender-bg:#D6E8F5;--score-skeptic-bg:#F5D6D6;
+            --score-bar-track:#E8D5C4;--score-bar-fill:#5B9BD5;
+            --score-d-text:#2563eb;--score-s-text:#dc2626;
+            --score-d-high:#1d4ed8;--score-d-mid:#2563eb;--score-d-low:#60a5fa;
+            --score-s-high:#991b1b;--score-s-mid:#dc2626;--score-s-low:#f87171;
+            --status-running:#D4734A;--status-complete:#2563eb;--status-idle:#C4B09A;
+            --status-yellow:#D4734A;--status-error:#dc2626;
+        }
+
+        /* ======== Smooth theme transition ======== */
+        html.transitioning,html.transitioning *,html.transitioning *::before,html.transitioning *::after{
+            transition:background-color 0.4s ease,color 0.4s ease,border-color 0.4s ease,box-shadow 0.4s ease !important;
+        }
+
+        /* ======== Button & hover utilities ======== */
+        .btn-primary{background:var(--btn-primary-bg);color:var(--btn-text)}
+        .btn-primary:hover{background:var(--btn-primary-hover)}
+        .btn-secondary{background:var(--btn-secondary-bg);color:var(--text-accent)}
+        .btn-secondary:hover{background:var(--btn-secondary-hover)}
+        .btn-resume{background:var(--btn-resume-bg);color:var(--btn-text)}
+        .btn-resume:hover{background:var(--btn-resume-hover)}
+        .btn-stop{background:var(--btn-stop-bg);color:var(--btn-stop-text)}
+        .btn-stop:hover{background:var(--btn-stop-hover)}
+        .btn-primary,.btn-secondary,.btn-resume,.btn-stop{
+            transition:background 0.2s,transform 0.15s,box-shadow 0.2s;
+        }
+        .btn-primary:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(126,184,140,0.25)}
+        .btn-secondary:hover{transform:translateY(-1px);box-shadow:0 2px 8px var(--accent-muted)}
+        .btn-resume:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(122,96,48,0.3)}
+        .btn-stop:hover{transform:translateY(-1px);box-shadow:0 2px 6px rgba(180,60,55,0.2)}
+        .btn-primary:active,.btn-secondary:active,.btn-resume:active,.btn-stop:active{
+            transform:translateY(0);box-shadow:none;
+        }
+        html.light .btn-primary:hover{box-shadow:0 2px 8px rgba(212,115,74,0.3)}
+        .hover-text-accent:hover{color:var(--accent) !important}
+        .hover-surface:hover{background:var(--bg-surface)}
+        .sidebar-item{position:relative;overflow:hidden}
+        .sidebar-item .delete-btn{
+            position:absolute;right:0;top:0;bottom:0;width:0;overflow:hidden;
+            display:flex;align-items:center;justify-content:center;
+            background:var(--btn-stop-bg);color:var(--btn-stop-text);
+            font-size:.65rem;cursor:pointer;white-space:nowrap;
+            transition:width 0.2s ease;
+        }
+        .sidebar-item:hover .delete-btn{width:44px}
+        .sidebar-item .delete-btn:hover{background:var(--btn-stop-hover)}
+        .sidebar-item::before{
+            content:'';position:absolute;inset:0;
+            background:linear-gradient(90deg,transparent,var(--accent-muted),transparent);
+            transform:translateX(-100%);transition:transform 0.4s ease;
+            pointer-events:none;z-index:0;
+        }
+        .sidebar-item:hover::before{transform:translateX(100%)}
+        .sidebar-item>*{position:relative;z-index:1}
+        .focus-accent:focus{border-color:var(--accent) !important}
+        .iter-input::-webkit-outer-spin-button,.iter-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
+        /* ======== Toggle switch ======== */
+        .theme-toggle-track{
+            width:52px;height:26px;border-radius:13px;background:var(--accent-dim);
+            position:relative;display:flex;align-items:center;justify-content:space-between;
+            padding:0 6px;cursor:pointer;transition:background 0.4s;
+        }
+        .theme-thumb{
+            position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
+            background:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,0.3);
+            transition:transform 0.4s cubic-bezier(0.68,-0.55,0.265,1.55),background 0.4s;
+        }
+        html.light .theme-thumb{transform:translateX(26px)}
+        .theme-icon-sun{opacity:0;transition:opacity 0.3s}
+        .theme-icon-moon{opacity:1;transition:opacity 0.3s}
+        html.light .theme-icon-sun{opacity:1}
+        html.light .theme-icon-moon{opacity:0}
+
+        /* ======== Verdict badge colors (theme-aware) ======== */
+        .badge-confirmed{background:rgba(126,184,140,0.15);color:#7EB88C}
+        .badge-supported{background:rgba(143,196,155,0.12);color:#8FC49B}
+        .badge-likely-true{background:rgba(164,209,175,0.12);color:#A4D1AF}
+        .badge-inconclusive{background:rgba(212,185,106,0.12);color:#D4B96A}
+        .badge-likely-false{background:rgba(212,160,160,0.12);color:#D4A0A0}
+        .badge-refuted-strong{background:rgba(212,128,128,0.12);color:#D48080}
+        .badge-refuted{background:rgba(200,96,96,0.15);color:#C86060}
+        html.light .badge-confirmed{background:rgba(22,163,74,0.15);color:#16a34a}
+        html.light .badge-supported{background:rgba(34,197,94,0.15);color:#22c55e}
+        html.light .badge-likely-true{background:rgba(21,128,61,0.15);color:#15803d}
+        html.light .badge-inconclusive{background:rgba(217,119,6,0.15);color:#d97706}
+        html.light .badge-likely-false{background:rgba(220,38,38,0.12);color:#dc2626}
+        html.light .badge-refuted-strong{background:rgba(185,28,28,0.15);color:#b91c1c}
+        html.light .badge-refuted{background:rgba(153,27,27,0.18);color:#991b1b}
+
+        /* ======== prose-dark ======== */
+        .prose-dark{color:var(--text-primary);line-height:1.65}
+        .prose-dark h1{color:var(--text-heading-1);font-size:.85rem;font-weight:700;margin:.75rem 0 .4rem}
+        .prose-dark h2{color:var(--text-heading-2);font-size:.8rem;font-weight:700;margin:.6rem 0 .3rem;border-bottom:1px solid var(--border-subtle);padding-bottom:.25rem}
+        .prose-dark h3{color:var(--text-heading-3);font-size:.75rem;font-weight:700;margin:.5rem 0 .25rem}
+        .prose-dark h4{color:var(--text-primary);font-size:.7rem;font-weight:700;margin:.4rem 0 .2rem}
+        .prose-dark p{margin:.5rem 0}
+        .prose-dark a{color:var(--text-link);text-decoration:underline}
+        .prose-dark strong{color:var(--text-heading-2)}
+        .prose-dark ul,.prose-dark ol{margin:.5rem 0;padding-left:1.25rem}
+        .prose-dark li{margin:.2rem 0}
+        .prose-dark ul{list-style-type:disc}
+        .prose-dark ol{list-style-type:decimal}
+        .prose-dark blockquote{border-left:3px solid var(--text-dim);padding-left:.75rem;color:var(--text-muted);margin:.75rem 0}
+        .prose-dark code{background:var(--bg-code);padding:.15rem .3rem;border-radius:.2rem;font-size:.8rem;color:var(--text-code)}
+        .prose-dark pre{background:var(--bg-code);padding:.75rem;border-radius:.4rem;overflow-x:auto;margin:.75rem 0}
+        .prose-dark pre code{background:none;padding:0;color:var(--text-primary)}
+        .prose-dark hr{border-color:var(--border-subtle);margin:1rem 0}
+        .prose-dark table{width:100%;border-collapse:collapse;margin:.75rem 0}
+        .prose-dark th,.prose-dark td{border:1px solid var(--border-subtle);padding:.35rem .5rem;text-align:left;font-size:.8rem}
+        .prose-dark th{background:var(--bg-code);color:var(--text-heading-2)}
+
+        /* ======== prose-summary ======== */
+        .prose-summary{color:var(--text-primary);line-height:1.75;font-size:.8rem}
+        .prose-summary h1{color:var(--text-heading-1);font-size:1.15rem;font-weight:700;margin:1.3rem 0 .6rem;border-bottom:1px solid var(--accent-muted);padding-bottom:.4rem}
+        .prose-summary h2{color:var(--text-heading-2);font-size:1rem;font-weight:700;margin:1.1rem 0 .5rem;border-bottom:1px solid var(--border-subtle);padding-bottom:.35rem}
+        .prose-summary h3{color:var(--text-heading-3);font-size:.9rem;font-weight:700;margin:.9rem 0 .4rem}
+        .prose-summary h4{color:var(--text-primary);font-size:.85rem;font-weight:700;margin:.75rem 0 .3rem}
+        .prose-summary p{margin:.7rem 0}
+        .prose-summary a{color:var(--text-link);text-decoration:underline}
+        .prose-summary strong{color:var(--text-heading-2)}
+        .prose-summary ul,.prose-summary ol{margin:.7rem 0;padding-left:1.5rem}
+        .prose-summary li{margin:.35rem 0}
+        .prose-summary ul{list-style-type:disc}
+        .prose-summary ol{list-style-type:decimal}
+        .prose-summary blockquote{border-left:3px solid var(--accent);padding-left:1rem;color:var(--text-muted);margin:1rem 0;font-style:italic}
+        .prose-summary code{background:var(--bg-code);padding:.2rem .4rem;border-radius:.25rem;font-size:.85rem;color:var(--text-code)}
+        .prose-summary pre{background:var(--bg-code);padding:1rem;border-radius:.5rem;overflow-x:auto;margin:1rem 0}
+        .prose-summary pre code{background:none;padding:0;color:var(--text-primary)}
+        .prose-summary hr{border-color:var(--accent-muted);margin:1.5rem 0}
+        .prose-summary table{width:100%;border-collapse:collapse;margin:1rem 0}
+        .prose-summary th,.prose-summary td{border:1px solid var(--border-subtle);padding:.5rem .75rem;text-align:left}
+        .prose-summary th{background:var(--accent-muted);color:var(--text-accent);font-weight:600}
+        @keyframes badge-glow{0%,100%{box-shadow:0 0 6px currentColor}50%{box-shadow:0 0 20px currentColor}}
+        .verdict-badge{display:inline-block;padding:.4rem 1.2rem;border-radius:9999px;font-weight:700;font-size:1.1rem;letter-spacing:.05em;margin:.5rem 0;animation:badge-glow 2.5s ease-in-out infinite;text-shadow:0 0 8px currentColor}
+
+        /* collapsible summary sections */
+        .summary-section{border-bottom:1px solid var(--border-subtle);margin-bottom:.25rem}
+        .summary-section summary{
+            cursor:pointer;list-style:none;display:flex;align-items:center;gap:.5rem;
+            padding:.5rem 0;user-select:none;
+        }
+        .summary-section summary::-webkit-details-marker{display:none}
+        .summary-section summary::before{
+            content:'▸';color:var(--text-dim);font-size:.75rem;transition:transform 0.2s;flex-shrink:0;
+        }
+        .summary-section summary h1,.summary-section summary h2{margin:0;border:none;padding:0}
+        .summary-section[open] summary::before{transform:rotate(90deg)}
+        .summary-section .section-body{padding:0 0 .75rem .1rem}
+        .summary-expand-all{
+            cursor:pointer;font-size:.65rem;padding:.2rem .6rem;border-radius:.25rem;
+            background:var(--btn-secondary-bg);color:var(--text-accent);border:none;
+        }
+        .summary-expand-all:hover{background:var(--btn-secondary-hover)}
+
+        /* ======== tmux-style ======== */
+        @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+        @keyframes ping-ring{0%{transform:scale(1);opacity:0.6}100%{transform:scale(2.5);opacity:0}}
+        @keyframes text-shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+        .pulse-dot{animation:pulse-dot 1.5s ease-in-out infinite}
+        #status-dot{position:relative}
+        .pulse-dot::after{
+            content:'';position:absolute;inset:-1px;border-radius:50%;
+            border:1.5px solid var(--status-running);
+            animation:ping-ring 1.5s cubic-bezier(0,0,0.2,1) infinite;
+            pointer-events:none;
+        }
+        .thinking{
+            background:linear-gradient(90deg,var(--text-thinking) 30%,var(--accent-hover) 50%,var(--text-thinking) 70%);
+            background-size:200% 100%;
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+            animation:text-shimmer 2s ease-in-out infinite !important;
+        }
+
+        .pane-header{
+            font-size:.7rem;letter-spacing:.05em;
+            padding:3px 10px;
+            border-bottom:1px solid var(--accent-dim);
+            background:var(--bg-base);
+            color:var(--text-accent);
+            font-family:monospace;
+        }
+
+        .tmux-border{border-color:var(--accent-dim)}
+
+        /* active pane header glow */
+        @keyframes header-glow{0%,100%{box-shadow:0 1px 4px var(--accent-muted)}50%{box-shadow:0 1px 12px var(--accent-muted)}}
+        .pane-header:has(.thinking:not(.hidden)){
+            animation:header-glow 2.5s ease-in-out infinite;
+            border-bottom-color:var(--accent);
+        }
+
+        /* score bar shimmer + glow (applied to both defender and skeptic fills) */
+        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+        .score-bar-fill{
+            background-size:200% 100%;
+            animation:shimmer 3s linear infinite;
+        }
+        #score-bar-defender{background:linear-gradient(90deg,var(--score-d-mid),rgba(255,255,255,0.18),var(--score-d-mid));box-shadow:0 0 6px rgba(91,143,196,0.30)}
+        #score-bar-skeptic{background:linear-gradient(90deg,var(--score-s-mid),rgba(255,255,255,0.18),var(--score-s-mid));box-shadow:0 0 6px rgba(192,96,96,0.30)}
+
+        /* resizable borders */
+        .resize-handle-h{
+            width:5px;min-width:5px;cursor:col-resize;
+            background:var(--accent-dim);transition:background .15s;
+            flex-shrink:0;z-index:5;
+        }
+        .resize-handle-h:hover,.resize-handle-h.active{background:var(--accent-hover)}
+        .resize-handle-h.active,.resize-handle-v.active{box-shadow:0 0 8px var(--accent),0 0 2px var(--accent)}
+        .resize-handle-v{
+            height:5px;min-height:5px;cursor:row-resize;
+            background:var(--accent-dim);transition:background .15s;
+            flex-shrink:0;z-index:5;
+        }
+        .resize-handle-v:hover,.resize-handle-v.active{background:var(--accent-hover)}
+        body.resizing{cursor:col-resize;user-select:none}
+        body.resizing-v{cursor:row-resize;user-select:none}
+
+        /* round tabs */
+        .round-tabs{display:flex;gap:0;background:var(--bg-base);border-bottom:1px solid var(--accent-dim);padding:0 4px;overflow-x:auto;flex-shrink:0}
+        .round-tab{
+            padding:2px 8px;font-size:.65rem;color:var(--text-dim);cursor:pointer;
+            border-right:1px solid var(--accent-dim);white-space:nowrap;
+            transition:color .1s,background .1s;
+        }
+        .round-tab:hover{color:var(--text-accent);background:var(--bg-surface)}
+        .round-tab{transition:color .15s,background .15s,box-shadow .15s}
+        .round-tab.active{color:var(--text-accent);background:var(--bg-surface-active);font-weight:700;box-shadow:inset 0 -2px 0 var(--accent);text-shadow:0 0 6px var(--accent-muted)}
+
+        /* sidebar transition */
+        .sidebar-hidden{transform:translateX(-100%)}
+
+        /* scrollbar styling */
+        *{scrollbar-width:thin;scrollbar-color:var(--accent-dim) var(--bg-base)}
+        ::-webkit-scrollbar{width:6px}
+        ::-webkit-scrollbar-track{background:var(--bg-base)}
+        ::-webkit-scrollbar-thumb{background:var(--accent-dim);border-radius:3px}
+        ::-webkit-scrollbar-thumb:hover{background:var(--accent-hover)}
+
+        /* modal transitions */
+        .modal-overlay{opacity:0;transition:opacity 0.25s ease;pointer-events:none}
+        .modal-overlay.visible{opacity:1;pointer-events:auto}
+        .modal-overlay.hidden{display:none}
+        .modal-content{
+            transform:scale(0.92) translateY(8px);opacity:0;
+            transition:transform 0.3s cubic-bezier(0.16,1,0.3,1),opacity 0.25s ease;
+        }
+        .modal-overlay.visible .modal-content{transform:scale(1) translateY(0);opacity:1}
+
+        /* verdict banner reveal */
+        @keyframes verdict-reveal{
+            0%{transform:scaleX(0);opacity:0}
+            60%{transform:scaleX(1.02);opacity:1;filter:brightness(1.3)}
+            100%{transform:scaleX(1);filter:brightness(1)}
+        }
+        #verdict-banner{transform-origin:center}
+        #verdict-banner.revealing{animation:verdict-reveal 0.6s cubic-bezier(0.16,1,0.3,1) forwards}
+
+        /* content entrance */
+        @keyframes content-enter{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        .content-entering{animation:content-enter 0.3s ease-out}
+
+        /* verdict colors */
+        .verdict-confirmed{color:#7EB88C}
+        .verdict-supported{color:#8FC49B}
+        .verdict-likely-true{color:#A4D1AF}
+        .verdict-inconclusive{color:#D4B96A}
+        .verdict-likely-false{color:#D4A0A0}
+        .verdict-refuted-strong{color:#D48080}
+        .verdict-refuted{color:#C86060}
+        html.light .verdict-confirmed{color:#16a34a}
+        html.light .verdict-supported{color:#22c55e}
+        html.light .verdict-likely-true{color:#15803d}
+        html.light .verdict-inconclusive{color:#d97706}
+        html.light .verdict-likely-false{color:#dc2626}
+        html.light .verdict-refuted-strong{color:#b91c1c}
+        html.light .verdict-refuted{color:#991b1b}
+    </style>
+    <script>if(localStorage.getItem('debater-theme')==='light')document.documentElement.classList.add('light')</script>
+</head>
+<body class="h-screen overflow-hidden font-mono" style="background:var(--bg-body);color:var(--text-primary)">
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed left-0 top-0 bottom-0 w-60 border-r tmux-border z-50 transition-transform duration-200 flex flex-col" style="background:var(--bg-base)">
+        <div class="h-10 flex items-center justify-between px-3 shrink-0" style="border-bottom:1px solid var(--accent-dim);background:var(--bg-base);color:var(--text-accent);font-size:.7rem;letter-spacing:.05em;font-family:monospace">
+            <span>── HISTORY ──</span>
+            <button onclick="toggleSidebar()" class="text-sm px-1 hover-text-accent" style="color:var(--text-accent-dim)">&times;</button>
+        </div>
+        <div id="debate-list" class="flex-1 overflow-y-auto"></div>
+        <div class="h-10 flex items-center px-2 shrink-0" style="border-top:1px solid var(--accent-dim)">
+            <button onclick="showNewDebateModal()" class="w-full btn-secondary py-1.5 rounded text-xs">+ New Debate</button>
+        </div>
+    </div>
+
+    <!-- Sidebar toggle (when hidden) -->
+    <button id="sidebar-toggle" onclick="toggleSidebar()" class="fixed left-0 top-1/2 -translate-y-1/2 z-40 border border-l-0 tmux-border px-1 py-3 rounded-r text-xs hidden hover-text-accent" style="background:var(--bg-base);color:var(--text-accent)">&equiv;</button>
+
+    <!-- Main content -->
+    <div id="main" class="ml-60 h-screen flex flex-col transition-all duration-200">
+
+        <!-- Top bar: score + status -->
+        <div class="h-10 border-b tmux-border flex items-center px-3 shrink-0" style="background:var(--bg-base)">
+            <div class="flex items-center gap-2" style="width:120px">
+                <button onclick="toggleSidebar()" class="text-xs hover-text-accent" style="color:var(--text-accent-dim)">&equiv;</button>
+                <span class="text-xs font-bold" style="color:var(--text-accent)">DEBATER</span>
+                <span id="topbar-title" class="text-xs truncate" style="color:var(--text-dim);max-width:200px"></span>
+            </div>
+            <div class="flex-1 flex items-center justify-center gap-3">
+                <div class="flex flex-col gap-1" style="min-width:240px">
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-xs" id="score-d-label" style="color:var(--score-d-text);min-width:90px;text-align:right">Defender: -</span>
+                        <div class="rounded overflow-hidden" style="background:var(--score-bar-track);height:6px;width:140px">
+                            <div id="score-bar-defender" class="score-bar-fill h-full rounded transition-all duration-500" style="width:50%"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-xs" id="score-s-label" style="color:var(--score-s-text);min-width:90px;text-align:right">Skeptic: -</span>
+                        <div class="rounded overflow-hidden" style="background:var(--score-bar-track);height:6px;width:140px">
+                            <div id="score-bar-skeptic" class="score-bar-fill h-full rounded transition-all duration-500" style="width:50%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 justify-end" style="width:120px">
+                <button id="chart-btn" class="hidden hover-text-accent" onclick="openScoreChart()" title="Score progression" style="background:none;border:none;cursor:pointer;color:var(--text-accent-dim);padding:2px">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                </button>
+                <span id="round-indicator" class="text-xs" style="color:var(--text-accent-dim)">R: -/-</span>
+                <span id="status-dot" class="w-2 h-2 rounded-full" style="background:var(--status-idle)"></span>
+            </div>
+        </div>
+
+        <!-- Verdict banner (hidden until complete) -->
+        <div id="verdict-banner" class="hidden border-b tmux-border px-4 py-2 text-center" style="background:var(--bg-base)">
+            <span class="text-[9px] mr-2 px-1.5 py-0.5 rounded" style="color:var(--text-dim);border:1px solid var(--border-section)">AI-Generated</span>
+            <span id="verdict-text" class="font-bold text-sm"></span>
+            <button onclick="openSummary()" class="ml-3 text-xs underline hover-text-accent" style="color:var(--text-accent-dim)">View Summary</button>
+        </div>
+
+        <!-- Evaluator + Research row -->
+        <div id="eval-row" class="flex shrink-0" style="height:30vh">
+            <div id="eval-col" class="flex-1 flex flex-col" style="min-width:80px">
+                <div class="pane-header flex items-center gap-2" id="eval-header"><span>── EVALUATOR ──</span><span id="eval-thinking" class="thinking text-[10px] hidden">evaluating...</span><button onclick="showModal('methodology-modal')" class="text-[9px] ml-auto hover-text-accent" style="color:var(--text-dim);text-decoration:underline">methodology</button></div>
+                <div id="eval-pane" class="flex-1 overflow-y-auto px-3 py-1 text-xs"></div>
+            </div>
+            <div class="resize-handle-h" data-resize="eval-factcheck-h"></div>
+            <div id="factcheck-col" class="flex-1 flex flex-col" style="min-width:80px">
+                <div class="pane-header flex items-center gap-2" id="factcheck-header"><span>── FACT CHECK ──</span><span id="factcheck-thinking" class="thinking text-[10px] hidden">checking...</span></div>
+                <div id="factcheck-tabs" class="round-tabs"></div>
+                <div id="factcheck-pane" class="flex-1 overflow-y-auto px-3 py-1 text-xs prose-dark" style="font-size:0.65rem"></div>
+            </div>
+            <div class="resize-handle-h" data-resize="factcheck-research-h"></div>
+            <div id="research-col" class="flex-1 flex flex-col" style="min-width:80px">
+                <div class="pane-header cursor-pointer flex items-center gap-2" onclick="toggleResearch()">
+                    <span>── RESEARCH ──</span> <span id="research-thinking" class="thinking text-[10px] hidden">researching...</span> <span id="research-toggle-icon" style="color:var(--text-accent-dim)">&#9660;</span>
+                </div>
+                <div id="research-tabs" class="round-tabs"></div>
+                <div id="research-pane" class="flex-1 overflow-y-auto px-3 py-1 prose-dark" style="font-size:0.65rem"></div>
+            </div>
+        </div>
+
+        <!-- Horizontal resize between eval row and debate columns -->
+        <div class="resize-handle-v" data-resize="eval-debate-v"></div>
+
+        <!-- Three-column debate area -->
+        <div id="debate-row" class="flex-1 flex min-h-0">
+            <!-- Defender -->
+            <div id="defender-col" class="flex flex-col" style="flex:1;min-width:100px">
+                <div class="pane-header flex items-center gap-2" id="defender-header"><span>── DEFENDER ──</span><span id="defender-thinking" class="thinking text-[10px] hidden">thinking...</span></div>
+                <div id="defender-tabs" class="round-tabs"></div>
+                <div id="defender-pane" class="flex-1 overflow-y-auto px-3 py-2 prose-dark text-xs"></div>
+            </div>
+            <div class="resize-handle-h" data-resize="defender-user-h"></div>
+            <!-- User (center) -->
+            <div id="user-col" class="flex flex-col" style="width:280px;min-width:100px">
+                <div class="pane-header">── USER ──</div>
+                <div id="user-claim" class="shrink-0 px-3 py-2 text-xs" style="display:none"></div>
+                <div id="user-pane" class="flex-1 overflow-y-auto px-3 py-2 text-xs"></div>
+                <div class="p-2" style="border-top:1px solid var(--accent-dim);background:var(--bg-base)">
+                    <div class="flex gap-1">
+                        <input id="user-input" type="text" placeholder="Steer the conversation..."
+                            class="flex-1 border tmux-border px-2 py-1 rounded text-xs font-mono focus:outline-none focus-accent"
+                            style="background:var(--bg-input);color:var(--text-accent)"
+                            onkeydown="if(event.key==='Enter')sendMessage()"
+                        />
+                        <button onclick="sendMessage()" class="btn-secondary px-2 py-1 rounded text-xs">Send</button>
+                    </div>
+                </div>
+            </div>
+            <div class="resize-handle-h" data-resize="user-skeptic-h"></div>
+            <!-- Skeptic -->
+            <div id="skeptic-col" class="flex flex-col" style="flex:1;min-width:100px">
+                <div class="pane-header flex items-center gap-2" id="skeptic-header"><span>── SKEPTIC ──</span><span id="skeptic-thinking" class="thinking text-[10px] hidden">thinking...</span></div>
+                <div id="skeptic-tabs" class="round-tabs"></div>
+                <div id="skeptic-pane" class="flex-1 overflow-y-auto px-3 py-2 prose-dark text-xs"></div>
+            </div>
+        </div>
+
+        <!-- Bottom bar: iterations + controls -->
+        <div class="h-10 border-t tmux-border flex items-center px-3 gap-2 shrink-0" style="background:var(--bg-base)">
+            <label class="text-xs" style="color:var(--text-accent-dim)">Iterations:</label>
+            <div class="flex items-center" style="border:1px solid var(--accent-dim);border-radius:4px;overflow:hidden">
+                <button onclick="adjustIterations(-1)" class="iter-btn" style="background:var(--bg-surface);color:var(--text-accent-dim);border:none;cursor:pointer;padding:2px 6px;font-size:.7rem;line-height:1;font-family:monospace" onmouseover="this.style.background='var(--accent-dim)';this.style.color='var(--text-accent)'" onmouseout="this.style.background='var(--bg-surface)';this.style.color='var(--text-accent-dim)'">&minus;</button>
+                <input id="iterations-input" type="number" value="5" min="1" max="50"
+                    class="w-8 text-xs font-mono focus:outline-none text-center iter-input"
+                    style="background:var(--bg-input);color:var(--text-accent);border:none;border-left:1px solid var(--accent-dim);border-right:1px solid var(--accent-dim);padding:2px 0;-moz-appearance:textfield"
+                />
+                <button onclick="adjustIterations(1)" class="iter-btn" style="background:var(--bg-surface);color:var(--text-accent-dim);border:none;cursor:pointer;padding:2px 6px;font-size:.7rem;line-height:1;font-family:monospace" onmouseover="this.style.background='var(--accent-dim)';this.style.color='var(--text-accent)'" onmouseout="this.style.background='var(--bg-surface)';this.style.color='var(--text-accent-dim)'">+</button>
+            </div>
+            <button id="run-btn" onclick="handleRun()" class="btn-primary px-3 py-1 rounded text-xs font-bold">Run</button>
+            <button id="resume-btn" onclick="handleResume()" class="btn-resume px-3 py-1 rounded text-xs font-bold hidden">Resume</button>
+            <button id="stop-btn" onclick="handleStop()" class="btn-stop px-3 py-1 rounded text-xs hidden">Stop</button>
+            <div class="flex-1"></div>
+            <span id="status-text" class="text-xs" style="color:var(--text-dim)"></span>
+            <button onclick="showSettings()" class="hover-text-accent ml-3" style="font-size:2.25rem;line-height:1;color:var(--text-accent);background:none;border:none;cursor:pointer" title="Settings">&#9881;</button>
+            <button id="theme-toggle" onclick="toggleTheme()" class="ml-2" title="Toggle theme" aria-label="Toggle theme" style="background:none;border:none;cursor:pointer;padding:2px">
+                <div class="theme-toggle-track">
+                    <svg class="theme-icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#f59e0b;flex-shrink:0"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    <svg class="theme-icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#8FC49B;flex-shrink:0"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    <div class="theme-thumb"></div>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Settings modal -->
+    <div id="settings-modal" class="modal-overlay fixed inset-0 z-[60] hidden flex items-center justify-center" style="background:var(--bg-overlay)">
+        <div class="modal-content border tmux-border rounded-lg p-5 w-[460px] max-h-[80vh] overflow-y-auto" style="background:var(--bg-base)">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-bold" style="color:var(--text-accent)">Settings</span>
+                <button onclick="hideSettings()" class="hover-text-accent" style="color:var(--text-accent-dim)">&times;</button>
+            </div>
+            <div class="space-y-3" id="settings-form">
+                <!-- Agent settings -->
+                <div class="text-xs font-bold mb-1 pb-1" style="color:var(--text-accent);border-bottom:1px solid var(--border-section)">Agent Models &amp; Effort</div>
+                <div id="agent-settings" class="space-y-2"></div>
+
+                <div class="text-xs font-bold mt-3 mb-1 pb-1" style="color:var(--text-accent);border-bottom:1px solid var(--border-section)">Early Stopping</div>
+                <div class="flex items-center gap-2">
+                    <label class="text-xs" style="color:var(--text-muted)">Stop after unchanged score for</label>
+                    <input id="early-stop-input" type="number" value="3" min="2" max="10"
+                        class="w-12 border tmux-border px-1 py-0.5 rounded text-xs font-mono"
+                        style="background:var(--bg-input);color:var(--text-accent)"
+                    />
+                    <span class="text-xs" style="color:var(--text-muted)">rounds</span>
+                </div>
+            </div>
+            <div class="flex justify-end mt-4">
+                <button onclick="hideSettings()" class="btn-secondary px-4 py-1.5 rounded text-xs">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New debate modal -->
+    <div id="new-debate-modal" class="modal-overlay fixed inset-0 z-[60] hidden flex items-center justify-center" style="background:var(--bg-overlay)">
+        <div class="modal-content border tmux-border rounded-lg p-5 w-[460px]" style="background:var(--bg-base)">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-bold" style="color:var(--text-accent)">New Debate</span>
+                <button onclick="hideNewDebateModal()" class="hover-text-accent" style="color:var(--text-accent-dim)">&times;</button>
+            </div>
+            <textarea id="claim-input" placeholder="Enter a claim to debate... e.g. 'Bitcoin will hit $200k this year', 'Coffee causes cancer', 'Remote work kills productivity'"
+                class="w-full border tmux-border p-3 rounded text-xs font-mono h-24 focus:outline-none focus-accent resize-none"
+                style="background:var(--bg-input);color:var(--text-accent)"
+            ></textarea>
+            <div class="mt-3">
+                <label class="text-[10px]" style="color:var(--text-dim)">Inject prior debate conclusions into evaluator (optional):</label>
+                <div id="prior-debate-list" class="mt-1 max-h-32 overflow-y-auto border tmux-border rounded p-1" style="background:var(--bg-input)">
+                    <div class="text-[10px] italic p-1" style="color:var(--text-dim)">No completed debates</div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-3">
+                <button onclick="hideNewDebateModal()" class="px-3 py-1.5 text-xs" style="color:var(--text-dim)">Cancel</button>
+                <button onclick="startDebate()" class="btn-primary px-4 py-1.5 rounded text-xs font-bold">Start</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Methodology modal -->
+    <div id="methodology-modal" class="modal-overlay fixed inset-0 z-[70] hidden flex items-center justify-center" style="background:var(--bg-overlay-heavy)" onclick="if(event.target===this)hideModal('methodology-modal')">
+        <div class="modal-content border tmux-border rounded-lg w-[700px] max-w-[95vw] max-h-[85vh] flex flex-col" style="background:var(--bg-input)" onclick="event.stopPropagation()">
+            <div class="shrink-0 px-6 pt-6 pb-3 flex items-center justify-between" style="border-bottom:1px solid var(--accent-muted)">
+                <span class="text-sm font-bold" style="color:var(--text-accent)">DEBATE METHODOLOGY</span>
+                <button onclick="hideModal('methodology-modal')" class="text-xl hover-text-accent" style="color:var(--text-accent-dim)">&times;</button>
+            </div>
+            <div class="flex-1 overflow-y-auto px-6 pb-6 pt-4 text-xs" style="color:var(--text-primary);line-height:1.8">
+                <p style="color:var(--text-dim)" class="mb-4">This system uses research-backed techniques to produce objective, bias-resistant analysis.</p>
+
+                <div class="mb-4">
+                    <div class="font-bold mb-1" style="color:var(--text-accent)">MULTI-AGENT ADVERSARIAL DEBATE</div>
+                    <p>Two AI agents argue opposing sides while an independent evaluator scores and a fact-checker verifies claims via web search.</p>
+                    <p style="color:var(--text-dim)">Du et al. (ICML 2024) &mdash; multi-agent debate improves factuality. Anthropic (2024) &mdash; debate &rarr; 76% judge accuracy vs 54% without.</p>
+                </div>
+
+                <div class="mb-4">
+                    <div class="font-bold mb-1" style="color:var(--text-accent)">INDEPENDENT FACT-CHECKING</div>
+                    <p>A separate agent verifies factual claims via web search, rating each VERIFIED / LIKELY TRUE / UNVERIFIED / DISPUTED / FALSE.</p>
+                    <p style="color:var(--text-dim)">Citation-blind: sources verified on content, not authority (arXiv:2512.09483). Up to 10 research queries per round.</p>
+                </div>
+
+                <div class="mb-4">
+                    <div class="font-bold mb-1" style="color:var(--text-accent)">EVALUATOR DEBIASING (5 corrections)</div>
+                    <div style="padding-left:1rem">
+                        <p>&bull; <b>Anti-position bias</b> &mdash; arguments evaluated independently of presentation order <span style="color:var(--text-dim)">(arXiv:2406.07791)</span></p>
+                        <p>&bull; <b>Anti-verbosity bias</b> &mdash; quality &ne; length; concise evidence beats padding <span style="color:var(--text-dim)">(arXiv:2310.10076)</span></p>
+                        <p>&bull; <b>Anti-confidence bias</b> &mdash; bold assertions don't count as evidence <span style="color:var(--text-dim)">(arXiv:2505.02151)</span></p>
+                        <p>&bull; <b>Anti-rhetoric bias</b> &mdash; logical content scored separately from emotional appeal <span style="color:var(--text-dim)">(arXiv:2504.00374)</span></p>
+                        <p>&bull; <b>Anti-anchoring</b> &mdash; each round scored independently, no momentum bias <span style="color:var(--text-dim)">(arXiv:2309.17012)</span></p>
+                    </div>
+                    <p class="mt-1" style="color:var(--text-dim)">Chain-of-thought evaluation: evaluator reasons through each criterion before scoring (Wharton Tech Report 2025).</p>
+                    <p style="color:var(--text-dim)">Anti-sycophancy: scores of 2-8 or 8-2 expected when one side dominates; 5-5 requires explicit justification (arXiv:2509.23055).</p>
+                </div>
+
+                <div class="mb-4">
+                    <div class="font-bold mb-1" style="color:var(--text-accent)">AGENT SELF-VERIFICATION</div>
+                    <p>Both debaters verify their own claims before submitting. Numbers double-checked, citations confirmed.</p>
+                    <p style="color:var(--text-dim)">Anticipatory reflection catches hidden assumptions (arXiv:2405.16334). Socratic sub-questioning for complex claims (arXiv:2303.08769).</p>
+                </div>
+
+                <div class="mb-4">
+                    <div class="font-bold mb-1" style="color:var(--text-accent)">CALIBRATED VERDICTS</div>
+                    <p>7-tier scale: CONFIRMED &rarr; STRONGLY SUPPORTED &rarr; LIKELY TRUE &rarr; INCONCLUSIVE &rarr; LIKELY FALSE &rarr; STRONGLY REFUTED &rarr; REFUTED.</p>
+                    <p style="color:var(--text-dim)">Confidence percentage extracted separately. Future predictions cannot be CONFIRMED/REFUTED &mdash; only the evidenced range applies.</p>
+                </div>
+
+                <div class="mb-4">
+                    <div class="font-bold mb-1" style="color:var(--text-accent)">WEB-GROUNDED RESEARCH</div>
+                    <p>All agents can search the web for real-time evidence. Research results are attributed and visible in the Research pane.</p>
+                </div>
+
+                <div class="mb-4">
+                    <div class="font-bold mb-1" style="color:var(--text-accent)">SUMMARIZER DEBIASING</div>
+                    <p>Anti-recency: all rounds weighted equally. Anti-verbosity: argument length &ne; argument quality. Substance over rhetoric.</p>
+                    <p style="color:var(--text-dim)">Recency bias documented in all 7 tested LLMs (arXiv:2509.11353).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary modal (full-screen overlay) -->
+    <div id="summary-modal" class="modal-overlay fixed inset-0 z-[70] hidden flex items-center justify-center" style="background:var(--bg-overlay-heavy)" onclick="if(event.target===this)closeSummary()">
+        <div class="modal-content border tmux-border rounded-lg w-[1300px] max-w-[95vw] max-h-[90vh] flex flex-col" style="background:var(--bg-input)" onclick="event.stopPropagation()">
+            <div id="summary-header" class="shrink-0 px-8 pt-8 pb-4" style="border-bottom:1px solid var(--accent-muted)"></div>
+            <div id="summary-body" class="flex-1 overflow-y-auto px-8 pb-8 pt-4 prose-summary"></div>
+        </div>
+    </div>
+
+    <!-- Score chart modal -->
+    <div id="chart-modal" class="modal-overlay fixed inset-0 z-[60] hidden flex items-center justify-center" style="background:var(--bg-overlay)" onclick="if(event.target===this)closeScoreChart()">
+        <div class="modal-content border tmux-border rounded-lg p-6 relative" style="background:var(--bg-base);width:700px;max-width:95vw" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-bold" style="color:var(--text-accent)">Score Progression</span>
+                <button onclick="closeScoreChart()" class="hover-text-accent" style="color:var(--text-accent-dim)">&times;</button>
+            </div>
+            <canvas id="score-chart" width="640" height="360" style="width:100%;border-radius:8px"></canvas>
+        </div>
+    </div>
+
+<script>
+// ---- Theme ----
+function toggleTheme() {
+    const html = document.documentElement;
+    html.classList.add('transitioning');
+    html.classList.toggle('light');
+    localStorage.setItem('debater-theme', html.classList.contains('light') ? 'light' : 'dark');
+    setTimeout(() => html.classList.remove('transitioning'), 450);
+}
+
+// ---- Modal transitions ----
+function showModal(id) {
+    const el = document.getElementById(id);
+    el.style.display = '';
+    el.classList.remove('hidden');
+    void el.offsetWidth;
+    el.classList.add('visible');
+}
+function hideModal(id) {
+    const el = document.getElementById(id);
+    el.classList.remove('visible');
+    const onEnd = () => { el.classList.add('hidden'); el.removeEventListener('transitionend', onEnd); };
+    el.addEventListener('transitionend', onEnd, { once: true });
+    setTimeout(() => { if (!el.classList.contains('hidden')) el.classList.add('hidden'); }, 350);
+}
+
+// ---- Hidden debates (client-side delete) ----
+let hiddenDebates = JSON.parse(localStorage.getItem('debater-hidden-debates') || '[]');
+function hideDebate(debateId, event) {
+    event.stopPropagation();
+    hiddenDebates.push(debateId);
+    localStorage.setItem('debater-hidden-debates', JSON.stringify(hiddenDebates));
+    if (currentDebateId === debateId) {
+        currentDebateId = null;
+        stopPolling();
+        clearPanes();
+    }
+    loadDebateList();
+}
+
+// ---- State ----
+let currentDebateId = null;
+let pollInterval = null;
+let sidebarPollInterval = null;
+let sidebarVisible = true;
+let researchVisible = true;
+let summaryVisible = false;
+let lastData = null;
+let selectedRound = { defender: null, skeptic: null, fact_checker: null };
+let selectedResearchTab = 'all';
+let lastRoundCount = { defender: 0, skeptic: 0, fact_checker: 0 };
+
+// Session settings — load from localStorage if available
+const DEFAULT_SETTINGS = {
+    models: {
+        defender: 'claude-haiku-4-5-20251001',
+        skeptic: 'claude-haiku-4-5-20251001',
+        fact_checker: 'claude-haiku-4-5-20251001',
+        evaluator: 'claude-haiku-4-5-20251001',
+        summarizer: 'claude-haiku-4-5-20251001',
+        researcher: 'claude-haiku-4-5-20251001',
+        analyst: 'claude-haiku-4-5-20251001',
+    },
+    efforts: {
+        defender: null,
+        skeptic: null,
+        fact_checker: null,
+        evaluator: null,
+        summarizer: null,
+        analyst: null,
+        researcher: null,
+    },
+    early_stop_threshold: 3,
+};
+let settings;
+try {
+    const saved = localStorage.getItem('debater-settings');
+    settings = saved ? {...DEFAULT_SETTINGS, ...JSON.parse(saved), models: {...DEFAULT_SETTINGS.models, ...(JSON.parse(saved).models||{})}, efforts: {...DEFAULT_SETTINGS.efforts, ...(JSON.parse(saved).efforts||{})}} : {...DEFAULT_SETTINGS};
+} catch { settings = {...DEFAULT_SETTINGS}; }
+
+const MODELS = [
+    { value: 'claude-haiku-4-5-20251001', label: 'Haiku' },
+    { value: 'claude-sonnet-4-6', label: 'Sonnet' },
+    { value: 'claude-opus-4-6', label: 'Opus' },
+];
+const EFFORTS = ['low', 'medium', 'high', 'max'];
+const AGENTS = ['defender', 'skeptic', 'fact_checker', 'evaluator', 'summarizer', 'researcher', 'analyst'];
+
+const VERDICT_COLORS = {
+    'CONFIRMED': 'verdict-confirmed',
+    'STRONGLY SUPPORTED': 'verdict-supported',
+    'LIKELY TRUE': 'verdict-likely-true',
+    'INCONCLUSIVE': 'verdict-inconclusive',
+    'LIKELY FALSE': 'verdict-likely-false',
+    'STRONGLY REFUTED': 'verdict-refuted-strong',
+    'REFUTED': 'verdict-refuted',
+};
+
+const BADGE_COLORS = {
+    'CONFIRMED': 'badge-confirmed',
+    'STRONGLY SUPPORTED': 'badge-supported',
+    'LIKELY TRUE': 'badge-likely-true',
+    'INCONCLUSIVE': 'badge-inconclusive',
+    'LIKELY FALSE': 'badge-likely-false',
+    'STRONGLY REFUTED': 'badge-refuted-strong',
+    'REFUTED': 'badge-refuted',
+};
+
+// ---- Init ----
+document.addEventListener('DOMContentLoaded', () => {
+    renderAgentSettings();
+    loadDebateList();
+    updateStatusText(null);
+    sidebarPollInterval = setInterval(loadDebateList, 30000);
+});
+
+// ---- Sidebar ----
+function toggleSidebar() {
+    sidebarVisible = !sidebarVisible;
+    const sb = document.getElementById('sidebar');
+    const main = document.getElementById('main');
+    const toggle = document.getElementById('sidebar-toggle');
+    if (sidebarVisible) {
+        sb.classList.remove('sidebar-hidden');
+        main.style.marginLeft = '240px';
+        toggle.classList.add('hidden');
+    } else {
+        sb.classList.add('sidebar-hidden');
+        main.style.marginLeft = '0';
+        toggle.classList.remove('hidden');
+    }
+}
+
+async function loadDebateList() {
+    try {
+        const resp = await fetch('/api/debates');
+        const data = await resp.json();
+        const list = document.getElementById('debate-list');
+        if (!data.debates || data.debates.length === 0) {
+            list.innerHTML = '<div class="p-3 text-xs italic" style="color:var(--text-dim)">No debates yet</div>';
+            return;
+        }
+        const visible = data.debates.filter(d => !hiddenDebates.includes(d.id));
+        if (visible.length === 0) {
+            list.innerHTML = '<div class="p-3 text-xs italic" style="color:var(--text-dim)">No debates yet</div>';
+            return;
+        }
+        list.innerHTML = visible.map(d => {
+            const active = d.id === currentDebateId;
+            const statusStyle = d.status === 'running' ? 'color:var(--status-yellow)' :
+                               d.status === 'complete' ? 'color:var(--accent)' :
+                               d.status === 'refused' ? 'color:var(--status-error)' :
+                               d.status === 'error' ? 'color:var(--status-error)' : 'color:var(--text-dim)';
+            const score = d.latest_score ? `D:${d.latest_score.defender} S:${d.latest_score.skeptic}` : '';
+            return `
+                <div class="px-3 py-2 cursor-pointer hover-surface sidebar-item" style="border-bottom:1px solid var(--border-section);${active ? 'background:var(--bg-input);border-left:2px solid var(--accent)' : ''}"
+                     onclick="selectDebate('${d.id}')">
+                    <div class="text-xs truncate pr-6 font-bold" style="color:var(--text-accent)">${escHtml(d.title || d.claim)}</div>
+                    ${d.title ? `<div class="text-[10px] truncate pr-6 mt-0.5" style="color:var(--text-dim)">${escHtml(d.claim)}</div>` : ''}
+                    <div class="flex items-center gap-2 mt-1">
+                        <span style="${statusStyle}" class="text-[10px]">${d.status}</span>
+                        <span style="color:var(--text-dim)" class="text-[10px]">${d.created_at.slice(0,10)}</span>
+                        ${score ? `<span style="color:var(--text-dim)" class="text-[10px]">${score}</span>` : ''}
+                        ${d.verdict ? `<span class="text-[10px] ${VERDICT_COLORS[d.verdict] || ''}" ${!VERDICT_COLORS[d.verdict] ? 'style="color:var(--text-dim)"' : ''}>${d.verdict}</span>` : ''}
+                    </div>
+                    ${d.status === 'running' ? `<div class="text-[10px] thinking mt-0.5">${d.active_agent ? d.active_agent + ': ' + (d.agent_status || 'working') : 'running'}...</div>` : ''}
+                    <div class="delete-btn" onclick="hideDebate('${d.id}', event)" title="Remove from list">&#10005;</div>
+                </div>
+            `;
+        }).join('');
+    } catch (e) {
+        console.error('Failed to load debate list:', e);
+    }
+}
+
+function selectDebate(debateId) {
+    currentDebateId = debateId;
+    startPolling(debateId);
+    loadDebateList();
+}
+
+// ---- Polling ----
+function startPolling(debateId) {
+    stopPolling();
+    currentDebateId = debateId;
+    fetchDebateState(debateId);
+    pollInterval = setInterval(() => fetchDebateState(debateId), 2000);
+}
+
+function stopPolling() {
+    if (pollInterval) clearInterval(pollInterval);
+    pollInterval = null;
+}
+
+async function fetchDebateState(debateId) {
+    try {
+        const resp = await fetch(`/api/debate/${debateId}`);
+        if (!resp.ok) return;
+        const data = await resp.json();
+        lastData = data;
+        updateUI(data);
+    } catch (e) {
+        console.error('Poll error:', e);
+    }
+}
+
+// ---- UI Update ----
+function updateUI(data) {
+    const state = data.state;
+    const rounds = state.rounds || [];
+    const isRunning = state.status === 'running';
+
+    // Title in top bar
+    document.getElementById('topbar-title').textContent = state.title ? `\u2014 ${state.title}` : '';
+
+    // Score bars (independent 0-10 each)
+    const evaluated = rounds.filter(r => r.evaluator);
+    if (evaluated.length > 0) {
+        const latest = evaluated[evaluated.length - 1].evaluator;
+        const dPct = Math.min(100, Math.max(0, latest.defender_score * 10));
+        const sPct = Math.min(100, Math.max(0, latest.skeptic_score * 10));
+        document.getElementById('score-d-label').textContent = `Defender: ${latest.defender_score} (R${evaluated.length})`;
+        document.getElementById('score-s-label').textContent = `Skeptic: ${latest.skeptic_score} (R${evaluated.length})`;
+        document.getElementById('score-bar-defender').style.width = `${dPct}%`;
+        document.getElementById('score-bar-skeptic').style.width = `${sPct}%`;
+    }
+    // Show chart button when 2+ rounds evaluated
+    document.getElementById('chart-btn').classList.toggle('hidden', evaluated.length < 2);
+
+    // Round indicator
+    document.getElementById('round-indicator').textContent = `R: ${state.current_round}/${state.settings.max_iterations}`;
+
+    // Status dot
+    const dot = document.getElementById('status-dot');
+    if (isRunning) {
+        dot.className = 'w-2 h-2 rounded-full pulse-dot ml-1';
+        dot.style.background = 'var(--status-running)';
+    } else if (state.status === 'complete') {
+        dot.className = 'w-2 h-2 rounded-full ml-1';
+        dot.style.background = 'var(--status-complete)';
+    } else {
+        dot.className = 'w-2 h-2 rounded-full ml-1';
+        dot.style.background = 'var(--status-idle)';
+    }
+
+    // Status text — detailed description
+    updateStatusText(state);
+
+    // Evaluator history
+    // Evaluator header — show prior context indicator
+    const priorCount = (state.prior_debates || []).length || (state.prior_debate_id ? 1 : 0);
+    if (state.analysis) {
+        document.querySelector('#eval-header > span:first-child').textContent = '── ANALYST ──';
+    } else {
+        document.querySelector('#eval-header > span:first-child').textContent = priorCount > 0 ? `── EVALUATOR (${priorCount} prior) ──` : '── EVALUATOR ──';
+    }
+
+    // Titlebar thinking indicators
+    const activeAgent = isRunning ? state.active_agent : null;
+    const agentStatus = state.agent_status || 'thinking';
+    document.getElementById('defender-thinking').classList.toggle('hidden', activeAgent !== 'defender');
+    document.getElementById('defender-thinking').textContent = agentStatus === 'researching' ? 'researching...' : 'thinking...';
+    document.getElementById('skeptic-thinking').classList.toggle('hidden', activeAgent !== 'skeptic');
+    document.getElementById('skeptic-thinking').textContent = agentStatus === 'researching' ? 'researching...' : 'thinking...';
+    document.getElementById('factcheck-thinking').classList.toggle('hidden', activeAgent !== 'fact_checker');
+    document.getElementById('factcheck-thinking').textContent = agentStatus === 'researching' ? 'verifying...' : 'checking...';
+    document.getElementById('eval-thinking').classList.toggle('hidden', activeAgent !== 'evaluator');
+    document.getElementById('research-thinking').classList.toggle('hidden', activeAgent !== 'researcher' && agentStatus !== 'researching');
+    if (agentStatus === 'researching' && activeAgent) {
+        document.getElementById('research-thinking').textContent = `for ${activeAgent}...`;
+    } else if (activeAgent === 'researcher') {
+        document.getElementById('research-thinking').textContent = 'researching...';
+    }
+
+    // Analysis mode: show analysis in eval pane, dim others
+    if (state.analysis) {
+        const evalPane = document.getElementById('eval-pane');
+        evalPane.innerHTML = `<div class="text-[10px] uppercase tracking-wider mb-2" style="color:var(--text-dim);letter-spacing:.1em">Analysis Mode</div>` + marked.parse(state.analysis);
+        document.getElementById('factcheck-pane').innerHTML = '<span class="italic" style="color:var(--text-dim)">N/A — analysis mode</span>';
+        document.getElementById('factcheck-tabs').innerHTML = '';
+    } else {
+        renderEvalHistory(rounds);
+        renderFactChecker(rounds, activeAgent === 'fact_checker');
+    }
+
+    // Research
+    renderResearch(data);
+
+    // Defender pane
+    renderAgentPane('defender-pane', rounds, 'defender', activeAgent === 'defender');
+
+    // Skeptic pane
+    renderAgentPane('skeptic-pane', rounds, 'skeptic', activeAgent === 'skeptic');
+
+    // User messages
+    renderUserMessages(state.user_messages || [], state.claim, state);
+
+    // Buttons
+    const isStopped = state.status === 'stopped';
+    const runBtn = document.getElementById('run-btn');
+    const resumeBtn = document.getElementById('resume-btn');
+    const stopBtn = document.getElementById('stop-btn');
+
+    if (!isRunning && stopping) {
+        stopping = false;
+        stopBtn.textContent = 'Stop';
+        stopBtn.disabled = false;
+        stopBtn.classList.remove('opacity-50');
+    }
+
+    runBtn.classList.toggle('hidden', isRunning || isStopped || stopping);
+    resumeBtn.classList.toggle('hidden', !isStopped);
+    stopBtn.classList.toggle('hidden', !isRunning && !stopping);
+    document.getElementById('user-input').disabled = false;
+
+    // Verdict banner
+    if (state.verdict) {
+        const banner = document.getElementById('verdict-banner');
+        banner.classList.remove('hidden');
+        if (!banner.dataset.revealed) {
+            banner.classList.add('revealing');
+            banner.dataset.revealed = '1';
+        }
+        const vtext = document.getElementById('verdict-text');
+        vtext.textContent = `VERDICT: ${state.verdict}${state.confidence ? ` (${state.confidence}% confidence)` : ''}`;
+        vtext.className = `font-bold text-sm ${VERDICT_COLORS[state.verdict] || ''}`;
+        vtext.style.color = VERDICT_COLORS[state.verdict] ? '' : 'var(--text-dim)';
+    } else {
+        document.getElementById('verdict-banner').classList.add('hidden');
+    }
+
+}
+
+function updateStatusText(state) {
+    const el = document.getElementById('status-text');
+    if (!state) {
+        el.textContent = 'Idle — no debate selected';
+        el.style.color = 'var(--text-dim)';
+        return;
+    }
+    const rounds = state.rounds || [];
+    const evalCount = rounds.filter(r => r.evaluator).length;
+    const maxIter = state.settings?.max_iterations || '?';
+
+    if (state.status === 'running') {
+        const agent = state.active_agent;
+        const agentStatus = state.agent_status || 'working';
+        const roundLabel = `R${state.current_round}/${maxIter}`;
+        if (agent) {
+            el.textContent = `${roundLabel} · ${agent} ${agentStatus}`;
+        } else {
+            el.textContent = `${roundLabel} · running`;
+        }
+        el.style.color = 'var(--status-yellow)';
+    } else if (state.status === 'complete') {
+        const latest = evalCount > 0 ? rounds.filter(r => r.evaluator).pop().evaluator : null;
+        let txt = `Complete — ${evalCount} round${evalCount !== 1 ? 's' : ''}`;
+        if (latest) txt += ` · D:${latest.defender_score} S:${latest.skeptic_score}`;
+        if (state.verdict) txt += ` · ${state.verdict}`;
+        if (state.confidence) txt += ` (${state.confidence}%)`;
+        if (state.early_stopped) txt += ' · early stop';
+        el.textContent = txt;
+        if (state.early_stopped) el.title = 'Scores were identical for consecutive rounds — debate converged';
+        el.style.color = 'var(--accent)';
+    } else if (state.status === 'stopped') {
+        el.textContent = `Stopped at R${state.current_round}/${maxIter} — ${evalCount} evaluated`;
+        el.style.color = 'var(--text-muted)';
+    } else if (state.status === 'refused') {
+        el.textContent = 'Refused — agents declined this topic';
+        el.style.color = 'var(--status-error)';
+    } else if (state.status === 'error') {
+        el.textContent = `Error at R${state.current_round}/${maxIter}`;
+        el.style.color = 'var(--status-error)';
+    } else {
+        el.textContent = state.status || 'Idle';
+        el.style.color = 'var(--text-dim)';
+    }
+}
+
+function renderEvalHistory(rounds) {
+    const pane = document.getElementById('eval-pane');
+    const evaluated = rounds.filter(r => r.evaluator);
+    if (evaluated.length === 0) {
+        pane.innerHTML = '<span class="italic" style="color:var(--text-dim)">Waiting for first evaluation...</span>';
+        return;
+    }
+    let html = '';
+    for (const r of evaluated) {
+        const e = r.evaluator;
+        const dStyle = e.defender_score >= 6 ? 'color:var(--score-d-high)' : e.defender_score <= 4 ? 'color:var(--score-d-low)' : 'color:var(--score-d-mid)';
+        const sStyle = e.skeptic_score >= 6 ? 'color:var(--score-s-high)' : e.skeptic_score <= 4 ? 'color:var(--score-s-low)' : 'color:var(--score-s-mid)';
+        const evalModel = fmtModel(r.evaluator_model, r.evaluator_effort);
+        html += `<div class="mb-1 pb-1" style="border-bottom:1px solid var(--border-section)">
+            <span style="color:var(--text-accent-dim)">R${r.round}</span>
+            <span style="${dStyle}" class="font-bold">${e.defender_score}</span>-<span style="${sStyle}" class="font-bold">${e.skeptic_score}</span>
+            ${evalModel ? `<span class="ml-1" style="color:var(--text-dim)">(${evalModel})</span>` : ''}
+            <span class="ml-1" style="color:var(--text-dim)">${escHtml(r.round_summary || e.justification)}</span>
+        </div>`;
+    }
+    const wasAtBottom = pane.scrollHeight - pane.scrollTop - pane.clientHeight < 30;
+    pane.innerHTML = html;
+    if (wasAtBottom) pane.scrollTop = pane.scrollHeight;
+}
+
+function renderFactChecker(rounds, isThinking) {
+    const pane = document.getElementById('factcheck-pane');
+    const tabBar = document.getElementById('factcheck-tabs');
+    const withFC = rounds.filter(r => r.fact_checker);
+    const count = withFC.length;
+
+    // Auto-select latest round when new one appears
+    if (count > lastRoundCount.fact_checker) {
+        selectedRound.fact_checker = withFC[count - 1].round;
+        lastRoundCount.fact_checker = count;
+    }
+    if (selectedRound.fact_checker === null && count > 0) {
+        selectedRound.fact_checker = withFC[count - 1].round;
+    }
+
+    // Render tabs
+    let tabHtml = '';
+    for (const r of withFC) {
+        const active = r.round === selectedRound.fact_checker;
+        tabHtml += `<div class="round-tab ${active ? 'active' : ''}" onclick="selectFactCheckRound(${r.round})">R${r.round}</div>`;
+    }
+    if (isThinking && (count === 0 || withFC[count - 1].round !== rounds[rounds.length - 1]?.round)) {
+        tabHtml += `<div class="round-tab thinking">R${(rounds[rounds.length - 1]?.round || 1)}...</div>`;
+    }
+    tabBar.innerHTML = tabHtml;
+
+    // Render selected round
+    const sel = withFC.find(r => r.round === selectedRound.fact_checker);
+    if (sel) {
+        pane.innerHTML = marked.parse(sel.fact_checker);
+    } else if (count === 0) {
+        pane.innerHTML = '<span class="italic" style="color:var(--text-dim)">Waiting for fact check...</span>';
+    }
+}
+
+function selectFactCheckRound(round) {
+    selectedRound.fact_checker = round;
+    if (lastData) updateUI(lastData);
+}
+
+function renderResearch(data) {
+    const pane = document.getElementById('research-pane');
+    const tabBar = document.getElementById('research-tabs');
+    const rounds = data.state?.rounds || [];
+
+    // Collect all research entries with round info
+    const allEntries = [];
+    for (const r of rounds) {
+        for (const entry of (r.research || [])) {
+            allEntries.push({ ...entry, round: r.round });
+        }
+    }
+
+    // No research at all
+    if (allEntries.length === 0) {
+        tabBar.innerHTML = '';
+        pane.innerHTML = '<span class="italic" style="color:var(--text-dim)">No research yet</span>';
+        return;
+    }
+
+    // Group by agent
+    const byAgent = {};
+    for (const e of allEntries) {
+        const key = e.requested_by || 'unknown';
+        if (!byAgent[key]) byAgent[key] = [];
+        byAgent[key].push(e);
+    }
+    const agents = Object.keys(byAgent);
+
+    // Reset tab if selected agent no longer has entries
+    if (selectedResearchTab !== 'all' && !byAgent[selectedResearchTab]) {
+        selectedResearchTab = 'all';
+    }
+
+    // Render tabs (only show if more than one agent)
+    if (agents.length > 1) {
+        let tabHtml = `<div class="round-tab ${selectedResearchTab === 'all' ? 'active' : ''}" onclick="selectResearchTab('all')">All</div>`;
+        for (const agent of agents) {
+            tabHtml += `<div class="round-tab ${selectedResearchTab === agent ? 'active' : ''}" onclick="selectResearchTab('${agent}')">${agent} (${byAgent[agent].length})</div>`;
+        }
+        tabBar.innerHTML = tabHtml;
+    } else {
+        tabBar.innerHTML = '';
+    }
+
+    // Render content
+    if (selectedResearchTab === 'all') {
+        // Use combined research.md if available, else build from entries
+        if (data.research_md && data.research_md.trim()) {
+            pane.innerHTML = marked.parse(data.research_md);
+        } else {
+            pane.innerHTML = renderResearchEntries(allEntries);
+        }
+    } else {
+        pane.innerHTML = renderResearchEntries(byAgent[selectedResearchTab] || []);
+    }
+}
+
+function renderResearchEntries(entries) {
+    if (!entries || entries.length === 0) return '<span class="italic" style="color:var(--text-dim)">No research</span>';
+    let html = '';
+    for (const e of entries) {
+        html += `<div class="mb-3 pb-2" style="border-bottom:1px solid var(--border-section)">`;
+        html += `<div class="text-[10px] mb-1" style="color:var(--text-dim)">R${e.round} · ${e.requested_by}</div>`;
+        html += `<div class="font-bold mb-1" style="color:var(--text-heading-3);font-size:.7rem">${escHtml(e.query)}</div>`;
+        if (e.results) html += marked.parse(e.results);
+        html += `</div>`;
+    }
+    return html;
+}
+
+function selectResearchTab(tab) {
+    selectedResearchTab = tab;
+    if (lastData) renderResearch(lastData);
+}
+
+function renderAgentPane(paneId, rounds, agent, isThinking) {
+    const pane = document.getElementById(paneId);
+    const tabBar = document.getElementById(agent + '-tabs');
+    const withContent = rounds.filter(r => r[agent]);
+    const count = withContent.length;
+
+    // Auto-select latest round when new one appears
+    if (count > lastRoundCount[agent]) {
+        selectedRound[agent] = withContent[count - 1].round;
+        lastRoundCount[agent] = count;
+    }
+
+    // Default to latest if nothing selected
+    if (selectedRound[agent] === null && count > 0) {
+        selectedRound[agent] = withContent[count - 1].round;
+    }
+
+    // Render tabs
+    let tabHtml = '';
+    for (const r of withContent) {
+        const active = r.round === selectedRound[agent];
+        tabHtml += `<div class="round-tab ${active ? 'active' : ''}" onclick="selectRound('${agent}',${r.round})">R${r.round}</div>`;
+    }
+    if (isThinking && (count === 0 || withContent[count - 1].round !== rounds[rounds.length - 1]?.round)) {
+        tabHtml += `<div class="round-tab thinking">R${(rounds[rounds.length - 1]?.round || 1)}...</div>`;
+    }
+    tabBar.innerHTML = tabHtml;
+
+    // Render selected round content
+    let html = '';
+    const sel = withContent.find(r => r.round === selectedRound[agent]);
+    if (sel) {
+        const modelTag = fmtModel(sel[agent + '_model'], sel[agent + '_effort']);
+        if (modelTag) html += `<div class="text-[10px] mb-1" style="color:var(--text-dim)">${modelTag}</div>`;
+        html += marked.parse(sel[agent]);
+    }
+    if (isThinking && (!sel || sel.round === selectedRound[agent])) {
+        html += `<div class="thinking text-xs mt-2">Thinking...</div>`;
+    }
+    const prevHtml = pane.innerHTML;
+    if (html !== prevHtml) {
+        const savedScroll = pane.scrollTop;
+        pane.innerHTML = html;
+        pane.classList.remove('content-entering');
+        void pane.offsetWidth;
+        pane.classList.add('content-entering');
+        pane.scrollTop = savedScroll;
+    }
+}
+
+function selectRound(agent, round) {
+    selectedRound[agent] = round;
+    if (lastData) updateUI(lastData);
+}
+
+function renderUserMessages(messages, claim, state) {
+    const claimEl = document.getElementById('user-claim');
+    const pane = document.getElementById('user-pane');
+
+    // Pinned initial claim
+    if (claim) {
+        claimEl.style.display = '';
+        claimEl.innerHTML = `<div class="pb-2" style="border-bottom:1px solid var(--border-section)">
+            <div class="text-[10px] uppercase tracking-wider mb-1.5" style="color:var(--text-dim);letter-spacing:.1em">Initial Claim</div>
+            <div style="border-left:2px solid var(--accent);padding-left:10px">
+                <div class="text-xs italic" style="color:var(--text-heading-2);line-height:1.6">"${escHtml(claim)}"</div>
+            </div>
+        </div>`;
+    } else {
+        claimEl.style.display = 'none';
+        claimEl.innerHTML = '';
+    }
+
+    // Build scrollable body: per-round status + interjections
+    let html = '';
+    const rounds = state ? (state.rounds || []) : [];
+    const evaluated = rounds.filter(r => r.evaluator);
+    const isComplete = state && state.status === 'complete';
+    const msgsByRound = {};
+    if (messages) {
+        for (const m of messages) {
+            const r = m.during_round || 0;
+            if (!msgsByRound[r]) msgsByRound[r] = [];
+            msgsByRound[r].push(m);
+        }
+    }
+
+    // Pre-round interjections (round 0 or before first round)
+    for (const m of (msgsByRound[0] || [])) {
+        html += renderInterjection(m);
+    }
+
+    // Per-round updates
+    for (const r of evaluated) {
+        const e = r.evaluator;
+        const isLast = r === evaluated[evaluated.length - 1];
+        const dStyle = `color:var(--score-d-text)`;
+        const sStyle = `color:var(--score-s-text)`;
+
+        html += `<div class="mb-1.5 pb-1.5" style="border-bottom:1px solid var(--border-section)">`;
+        html += `<div class="text-[10px]" style="color:var(--text-dim)">`;
+        html += `<span style="color:var(--text-accent-dim)">R${r.round}</span> `;
+        html += `<span style="${dStyle}" class="font-bold">D:${e.defender_score}</span>`;
+        html += `-`;
+        html += `<span style="${sStyle}" class="font-bold">S:${e.skeptic_score}</span>`;
+        html += ` — ${escHtml(r.round_summary || e.justification)}`;
+        html += `</div>`;
+
+        // Verdict on final round
+        if (isLast && isComplete && state.verdict) {
+            const verdictClass = VERDICT_COLORS[state.verdict] || '';
+            html += `<div class="mt-1 text-[10px]">`;
+            html += `<span class="${verdictClass}" style="font-weight:700">${state.verdict}</span>`;
+            if (state.confidence) html += ` <span style="color:var(--text-dim)">${state.confidence}% confidence</span>`;
+            if (state.early_stopped) html += ` <span style="color:var(--text-dim)">(early stop)</span>`;
+            html += ` <button onclick="openSummary()" class="underline hover-text-accent ml-1" style="color:var(--text-accent-dim)">summary →</button>`;
+            html += `</div>`;
+            // TL;DR: extract verdict explanation from summary
+            if (lastData?.summary_md) {
+                const verdictMatch = lastData.summary_md.match(/##\s*Verdict[\s\S]*?\*\*[A-Z ]+\*\*\s*\n+([\s\S]*?)(?=\n##|\n---|\Z)/i);
+                if (verdictMatch) {
+                    const tldr = verdictMatch[1].trim().split('\n').slice(0, 3).join(' ').slice(0, 300);
+                    if (tldr) html += `<div class="mt-1 text-[10px] leading-relaxed" style="color:var(--text-primary);border-left:2px solid var(--accent-muted);padding-left:6px">${escHtml(tldr)}</div>`;
+                }
+            }
+        }
+        html += `</div>`;
+
+        // Interjections during this round
+        for (const m of (msgsByRound[r.round] || [])) {
+            html += renderInterjection(m);
+        }
+    }
+
+    // Refusal message with analysis offer
+    if (state && state.status === 'refused' && !state.analysis) {
+        html += `<div class="mt-2 pt-2" style="border-top:1px solid var(--accent-muted)">
+            <div class="text-[10px] uppercase tracking-wider mb-1.5" style="color:var(--status-error);letter-spacing:.1em">Debate Declined</div>
+            <div class="text-[10px]" style="color:var(--text-primary);line-height:1.6">
+                Agents declined to debate this topic. An objective analysis is being generated automatically.
+            </div>
+        </div>`;
+    }
+
+    if (!html && !claim) {
+        html = '<span class="italic text-[10px]" style="color:var(--text-dim)">Your interjections appear here</span>';
+    }
+
+    const wasAtBottom = pane.scrollHeight - pane.scrollTop - pane.clientHeight < 30;
+    pane.innerHTML = html;
+    if (wasAtBottom) pane.scrollTop = pane.scrollHeight;
+}
+
+async function requestAnalysis() {
+    if (!currentDebateId) return;
+    const btn = document.getElementById('analyze-btn');
+    if (btn) { btn.textContent = 'Analyzing...'; btn.disabled = true; btn.classList.add('opacity-50'); }
+    try {
+        await fetch(`/api/debate/${currentDebateId}/analyze`, { method: 'POST' });
+        startPolling(currentDebateId);
+    } catch (e) {
+        console.error('Failed to start analysis:', e);
+        if (btn) { btn.textContent = 'Run Analysis Instead'; btn.disabled = false; btn.classList.remove('opacity-50'); }
+    }
+}
+
+function renderInterjection(m) {
+    const round = m.during_round || '?';
+    const agent = m.during_agent || '?';
+    return `<div class="mb-1.5 pb-1.5" style="border-bottom:1px solid var(--border-section)">
+        <div class="text-[10px]" style="color:var(--text-accent-dimmer)">${m.timestamp.slice(11,19)} · R${round} (${agent})</div>
+        <div class="text-xs mt-0.5" style="color:var(--text-accent)">${escHtml(m.message)}</div>
+    </div>`;
+}
+
+// ---- Actions ----
+async function showNewDebateModal() {
+    showModal('new-debate-modal');
+    document.getElementById('claim-input').focus();
+    // Populate prior debate checklist
+    const list = document.getElementById('prior-debate-list');
+    list.innerHTML = '<div class="text-[10px] italic p-1" style="color:var(--text-dim)">Loading...</div>';
+    try {
+        const resp = await fetch('/api/debates');
+        const data = await resp.json();
+        const completed = (data.debates || []).filter(d => d.status === 'complete' && d.verdict && !hiddenDebates.includes(d.id));
+        if (completed.length === 0) {
+            list.innerHTML = '<div class="text-[10px] italic p-1" style="color:var(--text-dim)">No completed debates</div>';
+            return;
+        }
+        list.innerHTML = '';
+        for (const d of completed) {
+            const verdictColor = VERDICT_COLORS[d.verdict] || '';
+            const label = document.createElement('label');
+            label.className = 'flex items-center gap-2 px-2 py-1 hover-surface rounded cursor-pointer';
+            label.innerHTML = `
+                <input type="checkbox" value="${d.id}" class="prior-debate-cb shrink-0" style="accent-color:var(--accent)" />
+                <span class="text-[10px] truncate flex-1" style="color:var(--text-accent)">${escHtml(d.claim.slice(0, 55))}</span>
+                <span class="${verdictColor} text-[10px] shrink-0" ${!verdictColor ? 'style="color:var(--text-dim)"' : ''}>${d.verdict}</span>
+            `;
+            list.appendChild(label);
+        }
+    } catch (e) {
+        console.error('Failed to load prior debates:', e);
+        list.innerHTML = '<div class="text-[10px] italic p-1" style="color:var(--status-error)">Failed to load</div>';
+    }
+}
+
+function hideNewDebateModal() {
+    hideModal('new-debate-modal');
+}
+
+async function startDebate() {
+    const claim = document.getElementById('claim-input').value.trim();
+    if (!claim) return;
+    hideNewDebateModal();
+    await startDebateWithClaim(claim);
+}
+
+async function sendMessage() {
+    const input = document.getElementById('user-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+
+    // No active debate — treat this as a new claim and auto-start
+    if (!currentDebateId) {
+        await startDebateWithClaim(msg);
+        return;
+    }
+
+    // Debate exists but is finished — treat as a new claim
+    const state = lastData?.state;
+    if (state && state.status !== 'running') {
+        await startDebateWithClaim(msg);
+        return;
+    }
+
+    // Debate is running — send as interjection
+    try {
+        await fetch(`/api/debate/${currentDebateId}/message`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({message: msg}),
+        });
+        // Instantly show in user pane (don't wait for next poll)
+        const pane = document.getElementById('user-pane');
+        const currentRound = lastData?.state?.current_round || '?';
+        const agent = lastData?.state?.active_agent || 'between rounds';
+        const now = new Date().toISOString().slice(11, 19);
+        const div = document.createElement('div');
+        div.className = 'mb-2 pb-2';
+        div.style.borderBottom = '1px solid var(--border-section)';
+        div.innerHTML = `
+            <div class="text-[10px]" style="color:var(--text-accent-dimmer)">${now} · during R${currentRound} (${agent})</div>
+            <div class="text-xs mt-0.5" style="color:var(--text-accent)">${escHtml(msg)}</div>
+            <div class="text-[10px] mt-0.5" style="color:var(--text-dim)">→ will be seen by defender &amp; skeptic next round</div>
+        `;
+        pane.appendChild(div);
+        pane.scrollTop = pane.scrollHeight;
+    } catch (e) {
+        console.error('Failed to send message:', e);
+    }
+}
+
+let creating = false;
+async function startDebateWithClaim(claim) {
+    if (creating) return;
+    creating = true;
+    document.getElementById('user-input').disabled = true;
+    const iterations = parseInt(document.getElementById('iterations-input').value) || 5;
+    const checkedBoxes = document.querySelectorAll('.prior-debate-cb:checked');
+    const priorDebateIds = Array.from(checkedBoxes).map(cb => cb.value);
+    try {
+        const body = {
+            claim,
+            iterations,
+            settings: {
+                models: {...settings.models},
+                efforts: {...settings.efforts},
+                early_stop_threshold: settings.early_stop_threshold,
+            },
+        };
+        if (priorDebateIds.length > 0) body.prior_debate_ids = priorDebateIds;
+        const resp = await fetch('/api/debate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body),
+        });
+        const data = await resp.json();
+        if (data.debate_id) {
+            currentDebateId = data.debate_id;
+            startPolling(data.debate_id);
+            loadDebateList();
+            clearPanes();
+            // Refresh sidebar after a few seconds to pick up generated title
+            setTimeout(loadDebateList, 5000);
+        }
+    } catch (e) {
+        console.error('Failed to create debate:', e);
+    } finally {
+        creating = false;
+        document.getElementById('user-input').disabled = false;
+    }
+}
+
+function adjustIterations(delta) {
+    const input = document.getElementById('iterations-input');
+    const val = Math.min(50, Math.max(1, (parseInt(input.value) || 5) + delta));
+    input.value = val;
+}
+
+async function handleRun() {
+    if (!currentDebateId) {
+        showNewDebateModal();
+        return;
+    }
+
+    // If debate exists, try to resume
+    const state = lastData?.state;
+    if (state && (state.status === 'complete' || state.status === 'stopped' || state.status === 'error')) {
+        const additionalIterations = parseInt(document.getElementById('iterations-input').value) || 3;
+        try {
+            await fetch(`/api/debate/${currentDebateId}/resume`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({additional_iterations: additionalIterations}),
+            });
+            startPolling(currentDebateId);
+        } catch (e) {
+            console.error('Failed to resume:', e);
+        }
+    } else if (!state) {
+        showNewDebateModal();
+    }
+}
+
+async function handleResume() {
+    if (!currentDebateId) return;
+    try {
+        await fetch(`/api/debate/${currentDebateId}/resume`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({additional_iterations: 0}),
+        });
+        startPolling(currentDebateId);
+    } catch (e) {
+        console.error('Failed to resume:', e);
+    }
+}
+
+let stopping = false;
+
+async function handleStop() {
+    if (!currentDebateId) return;
+    stopping = true;
+    const stopBtn = document.getElementById('stop-btn');
+    stopBtn.textContent = 'Stopping...';
+    stopBtn.disabled = true;
+    stopBtn.classList.add('opacity-50');
+    try {
+        await fetch(`/api/debate/${currentDebateId}/stop`, {method: 'POST'});
+    } catch (e) {
+        console.error('Failed to stop:', e);
+        stopping = false;
+        const sb = document.getElementById('stop-btn');
+        sb.textContent = 'Stop';
+        sb.disabled = false;
+        sb.classList.remove('opacity-50');
+    }
+}
+
+function toggleResearch() {
+    researchVisible = !researchVisible;
+    document.getElementById('research-pane').classList.toggle('hidden', !researchVisible);
+    document.getElementById('research-toggle-icon').textContent = researchVisible ? '\u25BC' : '\u25B6';
+}
+
+function openSummary() {
+    if (!lastData?.summary_md) return;
+    const modal = document.getElementById('summary-modal');
+    const header = document.getElementById('summary-header');
+    const body = document.getElementById('summary-body');
+    const state = lastData.state;
+
+    // Build verdict badge + sticky header
+    const verdict = state?.verdict || 'INCONCLUSIVE';
+    const badgeColor = BADGE_COLORS[verdict] || 'badge-inconclusive';
+    const claim = state?.claim || '';
+
+    let headerHtml = `<div class="flex items-start justify-between">`;
+    headerHtml += `<div class="flex-1 text-center">`;
+    headerHtml += `<div class="text-xs mb-2" style="color:var(--text-dim)">DEBATE SUMMARY <span class="ml-2 px-1.5 py-0.5 rounded" style="border:1px solid var(--border-section);font-size:9px">AI-Generated Analysis</span></div>`;
+    headerHtml += `<div class="text-sm mb-3" style="color:var(--text-accent)">"${escHtml(claim)}"</div>`;
+    headerHtml += `<span class="verdict-badge ${badgeColor}">${verdict}</span>`;
+    headerHtml += `</div>`;
+    headerHtml += `<button id="copy-summary-btn" onclick="copySummaryMarkdown()" class="text-xs hover-text-accent ml-4 px-2 py-1 rounded border tmux-border" style="color:var(--text-accent-dim)">Copy</button>`;
+    headerHtml += `<button onclick="closeSummary()" class="text-xl hover-text-accent ml-4 shrink-0" style="color:var(--text-accent-dim)">&times;</button>`;
+    headerHtml += `</div>`;
+    headerHtml += `<div class="flex justify-end mt-3"><button class="summary-expand-all" onclick="toggleAllSections(this)">Expand all</button></div>`;
+    header.innerHTML = headerHtml;
+
+    // Parse markdown, then split into collapsible sections by h1/h2
+    const parsed = marked.parse(lastData.summary_md);
+    body.innerHTML = wrapSectionsCollapsible(parsed);
+
+    showModal('summary-modal');
+}
+
+function wrapSectionsCollapsible(htmlStr) {
+    // Split on h1 and h2 tags, wrapping each in a <details> element
+    const tmp = document.createElement('div');
+    tmp.innerHTML = htmlStr;
+    const children = Array.from(tmp.childNodes);
+    let result = '';
+    let currentHeading = null;
+    let currentBody = '';
+    const forAgainst = /strongest\s+arguments?\s+(for|against)/i;
+
+    function flushSection() {
+        if (!currentHeading) {
+            result += currentBody;
+        } else {
+            const text = currentHeading.textContent || '';
+            const isKeySection = forAgainst.test(text);
+            result += `<details class="summary-section"${isKeySection ? ' open' : ''}>`;
+            result += `<summary>${currentHeading.outerHTML}</summary>`;
+            result += `<div class="section-body">${currentBody}</div>`;
+            result += `</details>`;
+        }
+        currentHeading = null;
+        currentBody = '';
+    }
+
+    for (const node of children) {
+        const tag = node.tagName;
+        if (tag === 'H1' || tag === 'H2') {
+            flushSection();
+            currentHeading = node;
+        } else {
+            currentBody += node.outerHTML || node.textContent || '';
+        }
+    }
+    flushSection();
+    return result;
+}
+
+function toggleAllSections(btn) {
+    const container = document.getElementById('summary-body');
+    const sections = container.querySelectorAll('.summary-section');
+    const allOpen = Array.from(sections).every(s => s.open);
+    sections.forEach(s => s.open = !allOpen);
+    btn.textContent = allOpen ? 'Expand all' : 'Collapse all';
+}
+
+function closeSummary() {
+    hideModal('summary-modal');
+}
+
+function copySummaryMarkdown() {
+    const text = lastData?.summary_md || lastData?.summary || '';
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copy-summary-btn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+    });
+}
+
+// ---- Score Chart ----
+function openScoreChart() {
+    showModal('chart-modal');
+    drawScoreChart();
+}
+
+function closeScoreChart() {
+    hideModal('chart-modal');
+}
+
+function drawScoreChart() {
+    const canvas = document.getElementById('score-chart');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+
+    // Hi-DPI scaling
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    const W = rect.width;
+    const H = rect.height;
+
+    // Get data
+    if (!lastData) return;
+    const rounds = (lastData.state.rounds || []).filter(r => r.evaluator);
+    if (rounds.length < 2) return;
+
+    const dScores = rounds.map(r => r.evaluator.defender_score);
+    const sScores = rounds.map(r => r.evaluator.skeptic_score);
+    const n = rounds.length;
+
+    // Read theme colors
+    const cs = getComputedStyle(document.documentElement);
+    const dColor = cs.getPropertyValue('--score-d-text').trim();
+    const sColor = cs.getPropertyValue('--score-s-text').trim();
+    const gridColor = cs.getPropertyValue('--border-subtle').trim();
+    const textColor = cs.getPropertyValue('--text-dim').trim();
+    const bgBase = cs.getPropertyValue('--bg-base').trim();
+
+    // Layout
+    const pad = { top: 30, right: 30, bottom: 40, left: 45 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+
+    // Clear
+    ctx.clearRect(0, 0, W, H);
+
+    // Helper: data to pixel
+    const xStep = plotW / (n - 1);
+    const toX = i => pad.left + i * xStep;
+    const toY = v => pad.top + plotH - (v / 10) * plotH;
+
+    // Grid lines (horizontal)
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 0.5;
+    ctx.globalAlpha = 0.3;
+    for (let v = 0; v <= 10; v += 2) {
+        const y = toY(v);
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(W - pad.right, y);
+        ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // Y-axis labels
+    ctx.font = '10px monospace';
+    ctx.fillStyle = textColor;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let v = 0; v <= 10; v += 2) {
+        ctx.fillText(v, pad.left - 8, toY(v));
+    }
+
+    // X-axis labels
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (let i = 0; i < n; i++) {
+        ctx.fillText(`R${rounds[i].round}`, toX(i), H - pad.bottom + 10);
+    }
+
+    // Smooth bezier curve helper
+    function drawSmoothLine(scores, color) {
+        const points = scores.map((v, i) => ({ x: toX(i), y: toY(v) }));
+
+        // Fill area under curve
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, toY(0));
+        ctx.lineTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+            const prev = points[i - 1];
+            const curr = points[i];
+            const cpx = (prev.x + curr.x) / 2;
+            ctx.bezierCurveTo(cpx, prev.y, cpx, curr.y, curr.x, curr.y);
+        }
+        ctx.lineTo(points[points.length - 1].x, toY(0));
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.06;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Draw line
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+            const prev = points[i - 1];
+            const curr = points[i];
+            const cpx = (prev.x + curr.x) / 2;
+            ctx.bezierCurveTo(cpx, prev.y, cpx, curr.y, curr.x, curr.y);
+        }
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        // Data points with glow
+        for (const p of points) {
+            // Glow
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 0.15;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            // Dot
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            // Inner highlight
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
+            ctx.fillStyle = bgBase;
+            ctx.globalAlpha = 0.4;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    drawSmoothLine(dScores, dColor);
+    drawSmoothLine(sScores, sColor);
+
+    // Legend
+    const legendY = 14;
+    ctx.font = '11px monospace';
+
+    // Defender legend
+    ctx.fillStyle = dColor;
+    ctx.beginPath();
+    ctx.arc(pad.left + 8, legendY, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = dColor;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Defender', pad.left + 18, legendY);
+
+    // Skeptic legend
+    const skX = pad.left + 100;
+    ctx.fillStyle = sColor;
+    ctx.beginPath();
+    ctx.arc(skX, legendY, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = sColor;
+    ctx.fillText('Skeptic', skX + 10, legendY);
+}
+
+// ESC closes modals
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { closeSummary(); closeScoreChart(); hideModal('methodology-modal'); }
+});
+
+function clearPanes() {
+    lastData = null;
+    summaryVisible = false;
+    stopping = false;
+    selectedRound = { defender: null, skeptic: null, fact_checker: null };
+    lastRoundCount = { defender: 0, skeptic: 0, fact_checker: 0 };
+    document.getElementById('factcheck-tabs').innerHTML = '';
+    document.getElementById('defender-tabs').innerHTML = '';
+    document.getElementById('skeptic-tabs').innerHTML = '';
+    document.getElementById('defender-pane').innerHTML = '';
+    document.getElementById('skeptic-pane').innerHTML = '';
+    document.getElementById('eval-pane').innerHTML = '<span class="italic" style="color:var(--text-dim)">Waiting for first evaluation...</span>';
+    document.getElementById('factcheck-pane').innerHTML = '<span class="italic" style="color:var(--text-dim)">Waiting for fact check...</span>';
+    document.getElementById('research-pane').innerHTML = '<span class="italic" style="color:var(--text-dim)">No research yet</span>';
+    document.getElementById('user-claim').style.display = 'none';
+    document.getElementById('user-claim').innerHTML = '';
+    document.getElementById('user-pane').innerHTML = '<span class="italic text-[10px]" style="color:var(--text-dim)">Your interjections appear here</span>';
+    document.getElementById('defender-thinking').classList.add('hidden');
+    document.getElementById('skeptic-thinking').classList.add('hidden');
+    document.getElementById('factcheck-thinking').classList.add('hidden');
+    document.getElementById('eval-thinking').classList.add('hidden');
+    document.getElementById('research-thinking').classList.add('hidden');
+    document.getElementById('verdict-banner').classList.add('hidden');
+    document.getElementById('verdict-banner').classList.remove('revealing');
+    delete document.getElementById('verdict-banner').dataset.revealed;
+    document.getElementById('summary-modal').classList.add('hidden');
+    document.getElementById('summary-modal').classList.remove('visible');
+    document.getElementById('score-d-label').textContent = 'Defender: -';
+    document.getElementById('score-s-label').textContent = 'Skeptic: -';
+    document.getElementById('chart-btn').classList.add('hidden');
+    document.getElementById('score-bar-defender').style.width = '50%';
+    document.getElementById('score-bar-skeptic').style.width = '50%';
+    document.getElementById('round-indicator').textContent = 'R: -/-';
+    updateStatusText(null);
+}
+
+// ---- Settings ----
+function showSettings() {
+    showModal('settings-modal');
+    document.getElementById('early-stop-input').value = settings.early_stop_threshold;
+}
+
+function hideSettings() {
+    settings.early_stop_threshold = parseInt(document.getElementById('early-stop-input').value) || 3;
+    // Read model/effort values from form
+    for (const agent of AGENTS) {
+        const modelSel = document.getElementById(`model-${agent}`);
+        const effortSel = document.getElementById(`effort-${agent}`);
+        if (modelSel) settings.models[agent] = modelSel.value;
+        if (effortSel) {
+            settings.efforts[agent] = effortSel.value === 'none' ? null : effortSel.value;
+        }
+    }
+    hideModal('settings-modal');
+    try { localStorage.setItem('debater-settings', JSON.stringify(settings)); } catch {}
+}
+
+function applyPreset(preset) {
+    const HAIKU = 'claude-haiku-4-5-20251001', SONNET = 'claude-sonnet-4-6';
+    const presets = {
+        speed: { models: Object.fromEntries(AGENTS.map(a => [a, HAIKU])), efforts: Object.fromEntries(AGENTS.map(a => [a, null])) },
+        quality: { models: { defender: HAIKU, skeptic: HAIKU, fact_checker: SONNET, evaluator: SONNET, summarizer: SONNET, researcher: HAIKU, analyst: SONNET }, efforts: Object.fromEntries(AGENTS.map(a => [a, null])) },
+    };
+    const p = presets[preset];
+    if (!p) return;
+    Object.assign(settings.models, p.models);
+    Object.assign(settings.efforts, p.efforts);
+    renderAgentSettings();
+    AGENTS.forEach(a => onModelChange(a));
+}
+
+function renderAgentSettings() {
+    const container = document.getElementById('agent-settings');
+    let html = '<div class="flex gap-2 mb-3"><button onclick="applyPreset(\'speed\')" class="text-[10px] px-2 py-0.5 rounded border tmux-border hover-text-accent" style="color:var(--text-dim)">Speed (all Haiku)</button><button onclick="applyPreset(\'quality\')" class="text-[10px] px-2 py-0.5 rounded border tmux-border hover-text-accent" style="color:var(--text-dim)">Quality (Sonnet judges)</button></div>';
+    for (const agent of AGENTS) {
+        const currentModel = settings.models[agent];
+        const currentEffort = settings.efforts[agent];
+        const isHaiku = currentModel.includes('haiku');
+        const label = agent.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        html += `
+            <div class="flex items-center gap-2">
+                <span class="text-xs" style="color:var(--text-muted);width:5.5rem;flex-shrink:0">${label}</span>
+                <select id="model-${agent}" class="border tmux-border text-xs px-1 py-0.5 rounded font-mono" style="background:var(--bg-input);color:var(--text-accent)" onchange="onModelChange('${agent}')">
+                    ${MODELS.map(m => `<option value="${m.value}" ${m.value === currentModel ? 'selected' : ''}>${m.label}</option>`).join('')}
+                </select>
+                <select id="effort-${agent}" class="border tmux-border text-xs px-1 py-0.5 rounded font-mono" style="background:var(--bg-input);color:var(--text-accent)" ${isHaiku ? 'disabled' : ''}>
+                    <option value="none" ${!currentEffort ? 'selected' : ''}>default</option>
+                    ${EFFORTS.map(e => `<option value="${e}" ${e === currentEffort ? 'selected' : ''}>${e}</option>`).join('')}
+                </select>
+            </div>
+        `;
+    }
+    container.innerHTML = html;
+}
+
+function onModelChange(agent) {
+    const modelSel = document.getElementById(`model-${agent}`);
+    const effortSel = document.getElementById(`effort-${agent}`);
+    if (modelSel.value.includes('haiku')) {
+        effortSel.value = 'none';
+        effortSel.disabled = true;
+    } else {
+        effortSel.disabled = false;
+    }
+}
+
+// ---- Helpers ----
+function escHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtModel(model, effort) {
+    if (!model) return '';
+    let name = model.includes('opus') ? 'opus' : model.includes('sonnet') ? 'sonnet' : 'haiku';
+    if (effort) name += '/' + effort;
+    return name;
+}
+
+// ---- Resizable pane borders ----
+(function() {
+    let activeHandle = null;
+    let startPos = 0;
+    let startSizes = {};
+
+    document.addEventListener('mousedown', (e) => {
+        const handle = e.target.closest('.resize-handle-h, .resize-handle-v');
+        if (!handle) return;
+        e.preventDefault();
+        activeHandle = handle;
+        handle.classList.add('active');
+        const resizeId = handle.dataset.resize;
+
+        if (resizeId === 'eval-factcheck-h') {
+            const evalCol = document.getElementById('eval-col');
+            const fcCol = document.getElementById('factcheck-col');
+            startPos = e.clientX;
+            startSizes = { left: evalCol.offsetWidth, right: fcCol.offsetWidth };
+            document.body.classList.add('resizing');
+        } else if (resizeId === 'factcheck-research-h') {
+            const fcCol = document.getElementById('factcheck-col');
+            const researchCol = document.getElementById('research-col');
+            startPos = e.clientX;
+            startSizes = { left: fcCol.offsetWidth, right: researchCol.offsetWidth };
+            document.body.classList.add('resizing');
+        } else if (resizeId === 'defender-user-h') {
+            const defCol = document.getElementById('defender-col');
+            const userCol = document.getElementById('user-col');
+            startPos = e.clientX;
+            startSizes = { left: defCol.offsetWidth, right: userCol.offsetWidth };
+            document.body.classList.add('resizing');
+        } else if (resizeId === 'user-skeptic-h') {
+            const userCol = document.getElementById('user-col');
+            const skepCol = document.getElementById('skeptic-col');
+            startPos = e.clientX;
+            startSizes = { left: userCol.offsetWidth, right: skepCol.offsetWidth };
+            document.body.classList.add('resizing');
+        } else if (resizeId === 'eval-debate-v') {
+            const evalRow = document.getElementById('eval-row');
+            startPos = e.clientY;
+            startSizes = { top: evalRow.offsetHeight };
+            document.body.classList.add('resizing-v');
+        }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!activeHandle) return;
+        e.preventDefault();
+        const resizeId = activeHandle.dataset.resize;
+
+        if (resizeId === 'eval-factcheck-h') {
+            const delta = e.clientX - startPos;
+            const evalCol = document.getElementById('eval-col');
+            const fcCol = document.getElementById('factcheck-col');
+            const newLeft = Math.max(80, startSizes.left + delta);
+            const newRight = Math.max(80, startSizes.right - delta);
+            evalCol.style.flex = 'none';
+            evalCol.style.width = newLeft + 'px';
+            fcCol.style.flex = 'none';
+            fcCol.style.width = newRight + 'px';
+        } else if (resizeId === 'factcheck-research-h') {
+            const delta = e.clientX - startPos;
+            const fcCol = document.getElementById('factcheck-col');
+            const researchCol = document.getElementById('research-col');
+            const newLeft = Math.max(80, startSizes.left + delta);
+            const newRight = Math.max(80, startSizes.right - delta);
+            fcCol.style.flex = 'none';
+            fcCol.style.width = newLeft + 'px';
+            researchCol.style.flex = 'none';
+            researchCol.style.width = newRight + 'px';
+        } else if (resizeId === 'defender-user-h') {
+            const delta = e.clientX - startPos;
+            const defCol = document.getElementById('defender-col');
+            const userCol = document.getElementById('user-col');
+            const newLeft = Math.max(100, startSizes.left + delta);
+            const newRight = Math.max(100, startSizes.right - delta);
+            defCol.style.flex = 'none';
+            defCol.style.width = newLeft + 'px';
+            userCol.style.width = newRight + 'px';
+        } else if (resizeId === 'user-skeptic-h') {
+            const delta = e.clientX - startPos;
+            const userCol = document.getElementById('user-col');
+            const skepCol = document.getElementById('skeptic-col');
+            const newLeft = Math.max(100, startSizes.left + delta);
+            const newRight = Math.max(100, startSizes.right - delta);
+            userCol.style.width = newLeft + 'px';
+            skepCol.style.flex = 'none';
+            skepCol.style.width = newRight + 'px';
+        } else if (resizeId === 'eval-debate-v') {
+            const delta = e.clientY - startPos;
+            const evalRow = document.getElementById('eval-row');
+            const newHeight = Math.max(60, Math.min(400, startSizes.top + delta));
+            evalRow.style.height = newHeight + 'px';
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (activeHandle) {
+            activeHandle.classList.remove('active');
+            activeHandle = null;
+            document.body.classList.remove('resizing', 'resizing-v');
+        }
+    });
+})();
+</script>
+
+</body>
+</html>

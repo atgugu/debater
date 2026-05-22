@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "debater"
+version = "0.1.0"
+description = "Multi-agent debate system orchestrating Claude CLI agents"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = []
+authors = [{ name = "Antoniu Gugu" }]
+keywords = ["claude", "llm", "debate", "multi-agent"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "pytest-cov", "ruff"]
+
+[project.scripts]
+debater = "debater.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+debater = ["py.typed"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+extend-exclude = ["debates"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "B", "UP"]
+ignore = ["E501", "B904"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
